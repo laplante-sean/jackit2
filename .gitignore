@@ -1,5 +1,6 @@
 # Jackit config
 site.cfg.json
+test.site.cfg.json
 
 # Jackit bug report
 bugreport.txt

@@ -214,7 +214,7 @@ class JackitConfig:
             raise ConfigError("Unable to load config file. Invalid JSON")
         except IOError as exc:
             raise ConfigError("Could not access file {}. {}".format(self.path, str(exc)))
-        except BaseException as exc:
+        except BaseException as exc:  # pragma: no cover
             raise ConfigError("Unknown error loading config: {}".format(str(exc)))
 
     def save(self):
@@ -226,7 +226,7 @@ class JackitConfig:
                 config_file.write(json.dumps(self.to_json(), sort_keys=True, separators=(',', ': '), indent=4))
         except IOError as exc:
             raise ConfigError("Could not access file {}. {}".format(self.path, str(exc)))
-        except BaseException as exc:
+        except BaseException as exc:  # pragma: no cover
             raise ConfigError("Unknown error saving config: {}".format(str(exc)))
 
     def is_development_mode(self):
