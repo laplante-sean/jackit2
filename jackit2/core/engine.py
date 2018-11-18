@@ -39,26 +39,42 @@ class EngineSingleton:
         self.ctx = None
         #: Vertex and fragment shader programs
         self.program = None
+        #: Pymunk simulation space
+        self.space = None
         #: Get the game's config
         self.config = SITE_DEPLOYMENT.config
         #: Total points
         self.total_points = 0
+        #: Total playtime in seconds
+        self.playtime = 0
         #: Number of deaths (factors into final score)
         self.deaths = 0
+        #: Window width (populated in setup())
+        self.width = 0
+        #: Window height (populated in setup())
+        self.height = 0
 
-    def setup(self):
+    def setup(self, width, height):
         '''
         Called to setup the OpenGL context
         '''
+        self.width = width
+        self.height = height
+
+        # Initialize modern GL context
         self.ctx = moderngl.create_context()
+        self.ctx.viewport = (0, 0, self.width, self.height)
         self.program = self.ctx.program(vertex_shader=VERTEX_SHADER, fragment_shader=FRAGMENT_SHADER)
 
-        sprites_path = os.path.join(SITE_DEPLOYMENT.resource_path, 'sprites')
-        crate = Image.open(os.path.join(sprites_path, "crate.png")).convert('RGBA')
+        # Initialize physics
+        self.space = pymunk.Space()
+        self.space.gravity = (0.0, -900.0)
+
+        crate = Image.open(os.path.join(SITE_DEPLOYMENT.sprites_path, "crate.png")).convert('RGBA')
         self.tex1 = self.ctx.texture(crate.size, 4, crate.tobytes())
         self.tex1.use(0)
 
-        ball = Image.open(os.path.join(sprites_path, "ball.png")).convert('RGBA')
+        ball = Image.open(os.path.join(SITE_DEPLOYMENT.sprites_path, "ball.png")).convert('RGBA')
         self.tex2 = self.ctx.texture(ball.size, 4, ball.tobytes())
         self.tex2.use(1)
 
@@ -72,7 +88,7 @@ class EngineSingleton:
             )
         )
 
-        self.vbo2 = self.ctx.buffer(reserve=(1024 * 1024))
+        self.vbo2 = self.ctx.buffer(reserve=(self.width * self.height))
 
         vao_content = [
             (vbo1, '2f 2f', 'in_vert', 'in_texture'),
@@ -81,8 +97,6 @@ class EngineSingleton:
 
         self.vao = self.ctx.vertex_array(self.program, vao_content)
 
-        self.space = pymunk.Space()
-        self.space.gravity = (0.0, -900.0)
 
         shape = pymunk.Segment(self.space.static_body, (5, 100), (595, 100), 1.0)
         shape.friction = 1.0
@@ -121,25 +135,23 @@ class EngineSingleton:
         body.apply_impulse_at_local_point((f,0), (0,0))
         self.balls.append(body)
 
-    def update(self, viewport, elapsed):
+    def update(self, elapsed):
         '''
         Updates all game components
         '''
-        self.ctx.viewport = viewport
+        self.playtime += elapsed
         self.ctx.clear(240, 240, 240)
         self.ctx.enable(moderngl.BLEND)
 
         for _ in range(10):
             self.space.step(0.001)
 
-        self.program['Camera'].value = (200, 300, viewport[2] / 2, viewport[3] / 2)
-
+        self.program['Camera'].value = (200, 300, self.ctx.viewport[2] / 2, self.ctx.viewport[3] / 2)
         self.vbo2.write(b''.join(struct.pack('3f2f4f', b.position.x, b.position.y, b.angle, 10, 10, 1, 1, 1, 0) for b in self.bodies))
         self.program['Texture'].value = 0
         self.vao.render(moderngl.TRIANGLE_STRIP, instances=len(self.bodies))
 
         self.vbo2.orphan()
-
         self.vbo2.write(b''.join(struct.pack('3f2f4f', b.position.x, b.position.y, b.angle, 15, 15, 1, 1, 1, 0) for b in self.balls))
         self.program['Texture'].value = 1
         self.vao.render(moderngl.TRIANGLE_STRIP, instances=len(self.balls))

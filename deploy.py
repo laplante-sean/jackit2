@@ -7,6 +7,7 @@ import sys
 import logging
 
 from jackit2.config import JackitConfig
+from jackit2.core.loader import LevelLoader
 
 
 class SiteDeploymentSingleton:
@@ -29,10 +30,17 @@ class SiteDeploymentSingleton:
     def __init__(self):
         self.base_path = os.path.dirname(os.path.abspath(__file__))
         self.resource_path = os.path.join(self.base_path, "jackit2", "resources")
+        self.sprites_path = os.path.join(self.resource_path, 'sprites')
+        self.sound_path = os.path.join(self.resource_path, "sound")
         self.config_path = os.path.join(self.base_path, "site.cfg.json")
+        self.builtin_levels = os.path.join(self.base_path, "jackit2", "levels")
+        self.contrib_levels = os.path.join(self.base_path, "contrib")
+        self.loader = LevelLoader.get()
         self._config = None
         self._setup_config()
         self._setup_logging()
+        self.loader.add_search_path(self.builtin_levels)
+        self.loader.add_search_path(self.contrib_levels)
 
     @property
     def config(self):

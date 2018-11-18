@@ -94,10 +94,7 @@ class JackitConfig:
         self.path = path
         self._width = 800
         self._height = 600
-        self._framerate = 60
         self._mode = "production"
-        self._fullscreen = False
-        self.sound_enabled = True
 
     @property
     def mode(self):
@@ -119,20 +116,6 @@ class JackitConfig:
             )
 
         self._mode = value
-
-    @property
-    def fullscreen(self):
-        '''
-        Get current value of fullscreen
-        '''
-        return self._fullscreen
-
-    @fullscreen.setter
-    def fullscreen(self, value):
-        '''
-        Set the value of fullscreen and validate
-        '''
-        self._fullscreen = validate_bool(value)
 
     @property
     def width(self):
@@ -162,20 +145,6 @@ class JackitConfig:
         '''
         self._height = validate_uint(value)
 
-    @property
-    def framerate(self):
-        '''
-        Get the value of framerate
-        '''
-        return self._framerate
-
-    @framerate.setter
-    def framerate(self, value):
-        '''
-        Set the value of framerate and validate
-        '''
-        self._framerate = validate_uint(value)
-
     def to_json(self):
         '''
         JSON representation of config options
@@ -185,10 +154,7 @@ class JackitConfig:
                 "width": self.width,
                 "height": self.height
             },
-            "mode": self.mode,
-            "fullscreen": self.fullscreen,
-            "framerate": self.framerate,
-            "sound_enabled": self.sound_enabled,
+            "mode": self.mode
         }
 
     def from_json(self, raw):
@@ -199,9 +165,6 @@ class JackitConfig:
         res = raw.get("resolution", {"width": 800, "height": 600})
         self.width = res.get("width", 800)
         self.height = res.get("height", 600)
-        self.fullscreen = raw.get("fullscreen", False)
-        self.framerate = raw.get("framerate", 60)
-        self.sound_enabled = validate_bool(raw.get("sound_enabled", True))
 
     def load(self):
         '''
