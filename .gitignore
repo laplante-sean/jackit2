@@ -1,3 +1,9 @@
+# Jackit config
+site.cfg.json
+
+# Jackit bug report
+bugreport.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

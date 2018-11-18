@@ -1,0 +1,25 @@
+{
+    "editor.renderWhitespace": "all",
+    "editor.detectIndentation": false,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "files.trimTrailingWhitespace": true,
+    "editor.trimAutoWhitespace": true,
+    "editor.minimap.enabled": false,
+    "python.linting.pylintArgs": [
+        "--rcfile=${workspaceFolder}/.pylintrc"
+    ],
+    "python.pythonPath": "${workspaceFolder}\\venv\\Scripts\\python.exe",
+    "editor.rulers": [
+        120
+    ],
+    "editor.wordWrap": "off",
+    "editor.useTabStops": true,
+    "files.insertFinalNewline": true,
+    "files.encoding": "utf8",
+    "files.exclude": {
+      "**/.git": true
+    },
+    "files.eol": "\n",
+    "trailing-spaces.trimOnSave": true
+}

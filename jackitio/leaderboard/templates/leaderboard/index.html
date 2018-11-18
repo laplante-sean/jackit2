@@ -1,0 +1,42 @@
+{% extends 'leaderboard/base.html' %}
+
+{% block head %}
+    {{ block.super }}
+{% endblock %}
+
+{% block content %}
+    {% if leaderboard %}
+        <table class="table table-condensed">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Playtime (s)</th>
+                    <th>Lvls</th>
+                    <th>Deaths</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for leader in leaderboard %}
+                    {% if leader.cheated %}
+                        <tr class="cheated">
+                    {% else %}
+                        <tr>
+                    {% endif %}
+                        <td>{{ leader.user }}</td>
+                        <td>{{ leader.playtime | floatformat }}</td>
+                        <td>{{ leader.levels_completed }}</td>
+                        <td>{{ leader.deaths }}</td>
+                        <td>{{ leader.score }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Sorry, no leaderboard :( #sadface</p>
+    {% endif %}
+{% endblock %}
+
+{% block script %}
+    {{ block.super }}
+{% endblock %}
