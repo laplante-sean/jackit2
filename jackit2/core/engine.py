@@ -12,6 +12,8 @@ from pymunk import Vec2d
 from PIL import Image
 
 from jackit2.core import VERTEX_SHADER, FRAGMENT_SHADER
+from jackit2.core.texture import TextureLoader
+from jackit2.core.audio import GameMusic, GameSound
 from deploy import SITE_DEPLOYMENT
 
 LOGGER = logging.getLogger(__name__)
@@ -41,6 +43,14 @@ class EngineSingleton:
         self.program = None
         #: Pymunk simulation space
         self.space = None
+        #: Loads the available game sounds
+        self.sounds = None
+        #: Load the game's music
+        self.music = None
+        #: Qt Main Windows set in setup()
+        self.main_window = None
+        #: Loads all textures
+        self.textures = TextureLoader()
         #: Get the game's config
         self.config = SITE_DEPLOYMENT.config
         #: Total points
@@ -54,12 +64,13 @@ class EngineSingleton:
         #: Window height (populated in setup())
         self.height = 0
 
-    def setup(self, width, height):
+    def setup(self, main_window):
         '''
         Called to setup the OpenGL context
         '''
-        self.width = width
-        self.height = height
+        self.width = main_window.width()
+        self.height = main_window.height()
+        self.main_window = main_window
 
         # Initialize modern GL context
         self.ctx = moderngl.create_context()
@@ -70,13 +81,15 @@ class EngineSingleton:
         self.space = pymunk.Space()
         self.space.gravity = (0.0, -900.0)
 
-        crate = Image.open(os.path.join(SITE_DEPLOYMENT.sprites_path, "crate.png")).convert('RGBA')
-        self.tex1 = self.ctx.texture(crate.size, 4, crate.tobytes())
-        self.tex1.use(0)
+        # Load textures
+        self.textures.load(self.ctx)
 
-        ball = Image.open(os.path.join(SITE_DEPLOYMENT.sprites_path, "ball.png")).convert('RGBA')
-        self.tex2 = self.ctx.texture(ball.size, 4, ball.tobytes())
-        self.tex2.use(1)
+        # Setup audio
+        #self.music = GameMusic(self.main_window)
+        #self.sounds = GameSound(self.main_window)
+
+        # Start the game music
+        #self.music.play()
 
         vbo1 = self.ctx.buffer(
             struct.pack(
@@ -96,7 +109,6 @@ class EngineSingleton:
         ]
 
         self.vao = self.ctx.vertex_array(self.program, vao_content)
-
 
         shape = pymunk.Segment(self.space.static_body, (5, 100), (595, 100), 1.0)
         shape.friction = 1.0
@@ -134,6 +146,7 @@ class EngineSingleton:
         f = 50000
         body.apply_impulse_at_local_point((f,0), (0,0))
         self.balls.append(body)
+        #self.sounds.play("test")  # Play the test sound
 
     def update(self, elapsed):
         '''
@@ -148,12 +161,12 @@ class EngineSingleton:
 
         self.program['Camera'].value = (200, 300, self.ctx.viewport[2] / 2, self.ctx.viewport[3] / 2)
         self.vbo2.write(b''.join(struct.pack('3f2f4f', b.position.x, b.position.y, b.angle, 10, 10, 1, 1, 1, 0) for b in self.bodies))
-        self.program['Texture'].value = 0
+        self.program['Texture'].value = self.textures.get("crate").location
         self.vao.render(moderngl.TRIANGLE_STRIP, instances=len(self.bodies))
 
         self.vbo2.orphan()
         self.vbo2.write(b''.join(struct.pack('3f2f4f', b.position.x, b.position.y, b.angle, 15, 15, 1, 1, 1, 0) for b in self.balls))
-        self.program['Texture'].value = 1
+        self.program['Texture'].value = self.textures.get("ball").location
         self.vao.render(moderngl.TRIANGLE_STRIP, instances=len(self.balls))
 
     def quit(self):

@@ -30,8 +30,8 @@ class SiteDeploymentSingleton:
     def __init__(self):
         self.base_path = os.path.dirname(os.path.abspath(__file__))
         self.resource_path = os.path.join(self.base_path, "jackit2", "resources")
-        self.sprites_path = os.path.join(self.resource_path, 'sprites')
-        self.sound_path = os.path.join(self.resource_path, "sound")
+        self.texture_path = os.path.join(self.resource_path, 'textures')
+        self.audio_path = os.path.join(self.resource_path, "audio")
         self.config_path = os.path.join(self.base_path, "site.cfg.json")
         self.builtin_levels = os.path.join(self.base_path, "jackit2", "levels")
         self.contrib_levels = os.path.join(self.base_path, "contrib")

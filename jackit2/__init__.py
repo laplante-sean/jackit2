@@ -78,7 +78,7 @@ class QtOpenGLWidget(QtOpenGL.QGLWidget):
         Initialize OpenGL
         '''
         LOGGER.debug("initializeGL()")
-        GAME_ENGINE.setup(self.width(), self.height())
+        GAME_ENGINE.setup(self)
 
     def paintGL(self):
         '''
