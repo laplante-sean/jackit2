@@ -92,9 +92,12 @@ class JackitConfig:
 
     def __init__(self, path):
         self.path = path
-        self._width = 800
-        self._height = 600
-        self._mode = "production"
+        self.width = 800
+        self.height = 600
+        self.framerate = 60
+
+        self._mode = None
+        self.mode = "production"
 
     @property
     def mode(self):
@@ -117,34 +120,6 @@ class JackitConfig:
 
         self._mode = value
 
-    @property
-    def width(self):
-        '''
-        Get the current value of width
-        '''
-        return self._width
-
-    @width.setter
-    def width(self, value):
-        '''
-        Set the value of width and validate
-        '''
-        self._width = validate_uint(value)
-
-    @property
-    def height(self):
-        '''
-        Get the value of height
-        '''
-        return self._height
-
-    @height.setter
-    def height(self, value):
-        '''
-        Set the value of height and validate
-        '''
-        self._height = validate_uint(value)
-
     def to_json(self):
         '''
         JSON representation of config options
@@ -154,7 +129,8 @@ class JackitConfig:
                 "width": self.width,
                 "height": self.height
             },
-            "mode": self.mode
+            "mode": self.mode,
+            "framerate": self.framerate
         }
 
     def from_json(self, raw):
@@ -162,9 +138,12 @@ class JackitConfig:
         Load values from JSON
         '''
         self.mode = raw.get("mode", "production")
+        self.framerate = validate_uint(raw.get("framerate", 60))
+
+        # Get resolution
         res = raw.get("resolution", {"width": 800, "height": 600})
-        self.width = res.get("width", 800)
-        self.height = res.get("height", 600)
+        self.width = validate_uint(res.get("width", 800))
+        self.height = validate_uint(res.get("height", 600))
 
     def load(self):
         '''
