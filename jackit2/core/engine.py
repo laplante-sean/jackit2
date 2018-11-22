@@ -11,7 +11,8 @@ from pymunk import Vec2d
 
 from jackit2.core import VERTEX_SHADER, FRAGMENT_SHADER
 from jackit2.core.texture import TextureLoader
-from jackit2.core.camera import Camera, simple_camera
+from jackit2.core.camera import Camera, complex_camera
+from jackit2.core.loader import LevelLoader
 
 LOGGER = logging.getLogger(__name__)
 
@@ -65,27 +66,8 @@ class EngineSingleton:
         self.mouse_pos = None
         #: Aspect ratio for the resolution
         self.aspect_ratio = None
-
-    def translate_x(self, x_pos):
-        '''
-        Get the x coordinate
-        '''
-        return x_pos - (self.width // 2)  # Floor division
-
-    def translate_y(self, y_pos):
-        '''
-        Get the y coordinate
-        '''
-        return (self.height // 2) - y_pos  # Floor division
-
-    def pos(self, x_pos, y_pos):
-        '''
-        Given an x and y where (0, 0) is being treated as the
-        top left corner of the screen, return a tuple of the
-        (x, y) position to be used with pymunk and modernGL which
-        has (0, 0) in the middle of the screen.
-        '''
-        return (self.translate_x(x_pos), self.translate_y(y_pos))
+        #: Level loader
+        self.levels = LevelLoader.get()
 
     def setup(self, main_window):
         '''
@@ -99,7 +81,7 @@ class EngineSingleton:
         # Initialize modern GL context
         self.ctx = moderngl.create_context(require=430)
         self.ctx.viewport = (0, 0, self.width, self.height)
-        self.camera = Camera((self.width, self.height), simple_camera)
+        self.camera = Camera((self.width, self.height), complex_camera)
         self.program = self.ctx.program(vertex_shader=VERTEX_SHADER, fragment_shader=FRAGMENT_SHADER)
 
         # Initialize physics
@@ -108,6 +90,12 @@ class EngineSingleton:
 
         # Load textures
         self.textures.load(self.ctx)
+
+        # Load the level
+        lvl_width, lvl_height = self.levels[0].load()
+
+        # Update the camera
+        self.camera.load_level((lvl_width, lvl_height))
 
         vbo1 = self.ctx.buffer(
             struct.pack(
@@ -130,8 +118,8 @@ class EngineSingleton:
 
         shape = pymunk.Segment(
             self.space.static_body,
-            self.pos(0, self.height),
-            self.pos(self.width, self.height),
+            (0, -50),
+            (self.width, -50),
             10
         )
 
@@ -163,7 +151,7 @@ class EngineSingleton:
         r = 32
         moment = pymunk.moment_for_circle(mass, 0, r, (0, 0))
         body = pymunk.Body(mass, moment)
-        body.position = self.pos(0, 0)
+        body.position = (0, 100)
         shape = pymunk.Circle(body, r, (0, 0))
         shape.friction = 0.3
         self.space.add(body, shape)

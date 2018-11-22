@@ -71,6 +71,12 @@ class LevelLoader:
         '''
         return iter(self._levels)
 
+    def __getitem__(self, index):
+        '''
+        Returns level at index
+        '''
+        return self._levels[index]()
+
     def get_by_num(self, level_num):
         '''
         Get level by number
@@ -80,7 +86,7 @@ class LevelLoader:
 
         for level in self._levels:
             if level.level_num == level_num:
-                return level
+                return level()
         return None
 
     def search(self, path):
@@ -138,11 +144,11 @@ class LevelLoader:
             LOGGER.exception("file is not a valid Python module: %s. %s.", path, str(exc))
             return None
 
-        if hasattr(mod, '__level__'):
+        if hasattr(mod, '__Level__'):
             # pylint: disable=E1101
-            level = mod.__level__
-            LOGGER.debug("found level: %s - %s (%s)", path, level.name, level.level_num)
+            level = mod.__Level__
+            LOGGER.debug("found level: %s", path)
             return level
 
-        LOGGER.debug("module __level__ attribute is not defined; file is not a valid level: %s", path)
+        LOGGER.debug("module __Level__ attribute is not defined; file is not a valid level: %s", path)
         return None

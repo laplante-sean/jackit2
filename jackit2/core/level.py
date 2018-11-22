@@ -16,11 +16,10 @@ class LevelMap:
     '''
     Level map format characters
     '''
-    GROUND = "G"
     EXIT = "E"
     SPAWN = "S"
-    BOX = "B"
-    BALL = "A"
+    FLOOR = "F"
+    WALL = "W"
 
 
 class Level:
@@ -54,8 +53,7 @@ class Level:
         # Coordinates for  rectangle 50 pixels bigger on all sides than the level
         self.death_zone = (-50, -50, self.width + 50, self.height + 50)
 
-        # Init the camera
-        # self.camera = Camera(self.game_engine.screen_size, complex_camera, self.width, self.height)
+        return self.width, self.height
 
     def _build_level(self):
         '''
@@ -66,7 +64,7 @@ class Level:
         for row in self.level_map:
             for col in row:
                 # sprite = None
-                if col == LevelMap.GROUND:
+                if col == LevelMap.FLOOR:
                     # sprite = self.create_platform(x, y, platform_type="ground")
                     pass
                 elif col == LevelMap.EXIT:
@@ -75,9 +73,10 @@ class Level:
                 elif col == LevelMap.SPAWN:
                     # self.player.spawn_point = (x, y)
                     pass
-                elif col == LevelMap.BOX:
+                elif col == LevelMap.WALL:
                     pass
-                elif col == LevelMap.BALL:
+                elif col == ' ':
+                    # Empty space is empty space
                     pass
                 else:
                     raise LevelGeneratorError("Unknown block character '{}'".format(col))
