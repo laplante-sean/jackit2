@@ -17,11 +17,11 @@ class QtOpenGLWidget(QtOpenGL.QGLWidget):
     '''
     Qt OpenGL widget class
     '''
-    # pylint: disable=C0103, R0201
+    # pylint: disable=C0103, R0201, R0902
 
     def __init__(self):
         fmt = QtOpenGL.QGLFormat()
-        fmt.setVersion(4, 1)
+        fmt.setVersion(4, 3)
         fmt.setProfile(QtOpenGL.QGLFormat.CoreProfile)
         fmt.setSampleBuffers(True)
         fmt.setSwapInterval(1)

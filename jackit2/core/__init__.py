@@ -49,3 +49,8 @@ void main() {
     f_color = vec4(color, tex.a);
 }
 '''
+
+# Global values for block size
+BLOCK_WIDTH = 64
+BLOCK_HEIGHT = 64
+BLOCK_RADIUS = 32

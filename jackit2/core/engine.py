@@ -11,6 +11,7 @@ from pymunk import Vec2d
 
 from jackit2.core import VERTEX_SHADER, FRAGMENT_SHADER
 from jackit2.core.texture import TextureLoader
+from jackit2.core.camera import Camera, simple_camera
 
 LOGGER = logging.getLogger(__name__)
 
@@ -59,11 +60,23 @@ class EngineSingleton:
         #: Window height (populated in setup())
         self.height = 0
         #: The camera position
-        self.camera_pos = None
+        self.camera = None
         #: The mouse position
         self.mouse_pos = None
         #: Aspect ratio for the resolution
         self.aspect_ratio = None
+
+    def translate_x(self, x_pos):
+        '''
+        Get the x coordinate
+        '''
+        return x_pos - (self.width // 2)  # Floor division
+
+    def translate_y(self, y_pos):
+        '''
+        Get the y coordinate
+        '''
+        return (self.height // 2) - y_pos  # Floor division
 
     def pos(self, x_pos, y_pos):
         '''
@@ -72,9 +85,7 @@ class EngineSingleton:
         (x, y) position to be used with pymunk and modernGL which
         has (0, 0) in the middle of the screen.
         '''
-        ret_x = x_pos - (self.width // 2)  # Floor division
-        ret_y = (self.height // 2) - y_pos  # Floor division
-        return (ret_x, ret_y)
+        return (self.translate_x(x_pos), self.translate_y(y_pos))
 
     def setup(self, main_window):
         '''
@@ -86,11 +97,10 @@ class EngineSingleton:
         self.physics_step = 1.0 / self.main_window.framerate
 
         # Initialize modern GL context
-        self.ctx = moderngl.create_context()
+        self.ctx = moderngl.create_context(require=430)
         self.ctx.viewport = (0, 0, self.width, self.height)
-        self.camera_pos = [0, 0, self.width, self.height]
+        self.camera = Camera((self.width, self.height), simple_camera)
         self.program = self.ctx.program(vertex_shader=VERTEX_SHADER, fragment_shader=FRAGMENT_SHADER)
-        self.aspect_ratio = self.width / self.height
 
         # Initialize physics
         self.space = pymunk.Space()
@@ -149,7 +159,7 @@ class EngineSingleton:
                 self.bodies.append(body)
 
     def shoot(self):
-        mass = 1000
+        mass = 100
         r = 32
         moment = pymunk.moment_for_circle(mass, 0, r, (0, 0))
         body = pymunk.Body(mass, moment)
@@ -157,7 +167,7 @@ class EngineSingleton:
         shape = pymunk.Circle(body, r, (0, 0))
         shape.friction = 0.3
         self.space.add(body, shape)
-        f = 8000000
+        f = 80000
         body.apply_impulse_at_local_point((f, 0), (0, 0))
         self.balls.append(body)
         #self.sounds.play("test")  # Play the test sound
@@ -185,9 +195,8 @@ class EngineSingleton:
         x_diff = self.mouse_pos[0] - x_pos
         y_diff = y_pos - self.mouse_pos[1]
 
-        # Move the camera by that much
-        self.camera_pos[0] += x_diff
-        self.camera_pos[1] += y_diff
+        # Move the camera
+        self.camera.move(x_diff, y_diff)
 
         self.mouse_pos = (x_pos, y_pos)  # Update the mouses position
 
@@ -196,10 +205,7 @@ class EngineSingleton:
         Called when the mouse wheel is spun. Positive number is wheel rotating away from user. Negative
         is when the wheel is rotated towards the user.
         '''
-
-        # Mess with the camera zoom
-        self.camera_pos[2] += delta * self.aspect_ratio
-        self.camera_pos[3] += delta
+        self.camera.zoom(delta)
 
     def update(self):
         '''
@@ -214,8 +220,12 @@ class EngineSingleton:
         # settings it should be adjusted to compensate for slower hardware
         self.space.step(self.physics_step)
 
+        # Update the camera
+        if self.balls:
+            self.camera.update((self.balls[0].position.x, self.balls[0].position.y, 32, 32))
+
         # Draw on the screen
-        self.program['Camera'].value = tuple(self.camera_pos)
+        self.program['Camera'].value = self.camera.get()
         self.vbo2.write(b''.join(struct.pack('3f2f4f', b.position.x, b.position.y, b.angle, 32, 32, 1, 1, 1, 0) for b in self.bodies))
         self.program['Texture'].value = self.textures.get("crate").location
         self.vao.render(moderngl.TRIANGLE_STRIP, instances=len(self.bodies))
