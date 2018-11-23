@@ -75,6 +75,7 @@ class LevelLoader:
         '''
         Returns level at index
         '''
+        LOGGER.debug("__getitem__: %s", self._levels)
         return self._levels[index]()
 
     def get_by_num(self, level_num):
@@ -114,6 +115,7 @@ class LevelLoader:
                 if filename.endswith(".py"):
                     level = self._discover_level(path)
                     self._levels.append(LevelStub(level))
+                    LOGGER.debug("Levels: %s", self._levels)
 
     def add_search_path(self, path):
         '''

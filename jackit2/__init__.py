@@ -7,8 +7,9 @@ import logging
 
 from PyQt5 import QtOpenGL, QtWidgets, QtCore
 
-from jackit2.core.engine import GAME_ENGINE
 from deploy import SITE_DEPLOYMENT
+from jackit2.core.engine import GAME_ENGINE
+
 
 LOGGER = logging.getLogger(__name__)
 

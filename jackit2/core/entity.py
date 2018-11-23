@@ -9,6 +9,17 @@ import moderngl
 import pymunk
 
 
+def create_static_box(x_pos, y_pos, width, height, friction):
+    '''
+    Create a static box (cannot move)
+    '''
+    body = pymunk.Body(body_type=pymunk.Body.STATIC)
+    body.position = pymunk.Vec2d(x_pos, y_pos)
+    shape = pymunk.Poly.create_box(body, (width, height))
+    shape.friction = friction
+    return shape
+
+
 def create_box(x_pos, y_pos, width, height, mass, friction):
     '''
     Create a non-static box
@@ -53,7 +64,7 @@ class Entity:
         self._texture = texture
 
         # If True, this item cannot be moved and has no physics applied
-        self.static = static
+        self._static = static
 
         # Whether or not this entity can be collected
         # Set by subclass
@@ -64,11 +75,11 @@ class Entity:
         self._value = None
 
         # Whether or not the entity can be broken
-        self.breakable = False
+        self._breakable = False
 
         # An optional collectable entity that this object contains
         # Will appear when broken if it's breakable
-        self.contains = None
+        self._contains = None
 
     @property
     def x_pos(self):
@@ -128,9 +139,27 @@ class Entity:
 
     def is_collectable(self):
         '''
-        Return whether or not the item is collectable
+        Return whether or not the entity is collectable
         '''
         return self._collectable
+
+    def is_static(self):
+        '''
+        Returns whether or not the entity is static
+        '''
+        return self._static
+
+    def is_breakable(self):
+        '''
+        Returns whether or not the entity is breakable
+        '''
+        return self._breakable
+
+    def get_texture(self):
+        '''
+        Return the location attribute of the texture
+        '''
+        return self._texture
 
     def to_bytes(self):
         '''
@@ -141,12 +170,6 @@ class Entity:
             self.angle, (self.width / 2), (self.height / 2),
             1, 1, 1, 0
         )
-
-    def get_texture_location(self):
-        '''
-        Return the location attribute of the texture
-        '''
-        return self._texture.location
 
 
 class EntityManager:
@@ -190,6 +213,9 @@ class EntityManager:
         for _, entities in self._entities.items():
             # Entities are grouped by type and drawn all at once (per type)
             self.frame_buffer.write(b''.join(ent.to_bytes() for ent in entities))
-            self.program["Texture"].value = entities[0].get_texture_location()
+
+            # Since we're grouping by type, they should all share the same texture
+            self.program["Texture"].value = entities[0].get_texture().location
+
             self.vertex_array.render(moderngl.TRIANGLE_STRIP, instances=len(entities))
             self.frame_buffer.orphan()

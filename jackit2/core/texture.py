@@ -7,8 +7,6 @@ import logging
 
 from PIL import Image
 
-from deploy import SITE_DEPLOYMENT
-
 LOGGER = logging.getLogger(__name__)
 G_TEX_LOCATION = 0
 
@@ -87,6 +85,8 @@ class TextureLoader:
         '''
         Load all the textures
         '''
+        from deploy import SITE_DEPLOYMENT
+
         for (dirpath, _, filenames) in os.walk(SITE_DEPLOYMENT.texture_path):
             for filename in filenames:
                 if not filename.endswith(".png"):

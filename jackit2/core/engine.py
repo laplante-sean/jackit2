@@ -19,6 +19,13 @@ from jackit2.entities import Crate, Ball
 LOGGER = logging.getLogger(__name__)
 
 
+class SetupFailed(Exception):
+    '''
+    Exception thrown if setup fails
+    '''
+    pass
+
+
 class EngineSingleton:
     '''
     Main game engine.
@@ -77,6 +84,9 @@ class EngineSingleton:
         '''
         Called to setup the OpenGL context
         '''
+        #if not self.levels:
+        #    raise SetupFailed("No levels could be loaded")
+
         self.width = main_window.width()
         self.height = main_window.height()
         self.main_window = main_window
@@ -91,15 +101,6 @@ class EngineSingleton:
         # Initialize physics
         self.space = pymunk.Space()
         self.space.gravity = (0.0, -900.0)
-
-        # Load textures
-        self.textures.load(self.ctx)
-
-        # Load the level
-        lvl_width, lvl_height = self.levels[0].load()
-
-        # Update the camera
-        self.camera.load_level((lvl_width, lvl_height))
 
         vbo1 = self.ctx.buffer(
             struct.pack(
@@ -122,26 +123,14 @@ class EngineSingleton:
 
         self.entity_mgr = EntityManager(self.space, self.vbo2, self.vao, self.program)
 
-        shape = pymunk.Segment(
-            self.space.static_body,
-            (0, -50),
-            (self.width, -50),
-            10
-        )
+        # Load textures
+        self.textures.load(self.ctx)
 
-        shape.friction = 1.0
-        shape.elasticity = 0.9
-        self.space.add(shape)
+        # Load the level
+        lvl_width, lvl_height = self.levels[0].load(self.entity_mgr)
 
-        x = Vec2d(-270, 7.5) + (300, 100)
-        y = Vec2d(0, 0)
-
-        self.floor = shape
-
-        for x in range(5):
-            for y in range(10):
-                crate = Crate((300 + x * 100), 105 + y * (64 + 0.1), 64, 64)
-                self.entity_mgr.add(crate)
+        # Update the camera
+        self.camera.load_level((lvl_width, lvl_height))
 
     def shoot(self):
         '''
