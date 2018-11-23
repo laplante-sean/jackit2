@@ -54,12 +54,30 @@ class TextureLoader:
     Loads all textures
     '''
 
+    _instance = None
+
     def __init__(self):
         self._textures = {}
 
-    def get(self, name):
+    @classmethod
+    def create(cls):
         '''
-        Get a texture
+        Create an instance of the texture loader
+        '''
+        ldr = cls()
+        TextureLoader._instance = ldr
+        return ldr
+
+    @classmethod
+    def get(cls):
+        '''
+        Get or create an instance of the texture loader
+        '''
+        return cls._instance or cls.create()
+
+    def get_texture_by_name(self, name):
+        '''
+        Get a texture by its name
         '''
         if name not in self._textures:
             raise KeyError("No texture found with name '{}'".format(name))

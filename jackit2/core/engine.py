@@ -11,8 +11,10 @@ from pymunk import Vec2d
 
 from jackit2.core import VERTEX_SHADER, FRAGMENT_SHADER
 from jackit2.core.texture import TextureLoader
-from jackit2.core.camera import Camera, complex_camera
+from jackit2.core.camera import Camera, simple_camera
 from jackit2.core.loader import LevelLoader
+from jackit2.core.entity import EntityManager
+from jackit2.entities import Crate, Ball
 
 LOGGER = logging.getLogger(__name__)
 
@@ -50,8 +52,6 @@ class EngineSingleton:
         self.music = None
         #: Qt Main Windows set in setup()
         self.main_window = None
-        #: Loads all textures
-        self.textures = TextureLoader()
         #: Total points
         self.total_points = 0
         #: Number of deaths (factors into final score)
@@ -68,6 +68,10 @@ class EngineSingleton:
         self.aspect_ratio = None
         #: Level loader
         self.levels = LevelLoader.get()
+        #: Loads all textures
+        self.textures = TextureLoader.get()
+        #: The entity manager. Has all entities to be rendered. Setup in setup()
+        self.entity_mgr = None
 
     def setup(self, main_window):
         '''
@@ -81,7 +85,7 @@ class EngineSingleton:
         # Initialize modern GL context
         self.ctx = moderngl.create_context(require=430)
         self.ctx.viewport = (0, 0, self.width, self.height)
-        self.camera = Camera((self.width, self.height), complex_camera)
+        self.camera = Camera((self.width, self.height), simple_camera)
         self.program = self.ctx.program(vertex_shader=VERTEX_SHADER, fragment_shader=FRAGMENT_SHADER)
 
         # Initialize physics
@@ -116,6 +120,8 @@ class EngineSingleton:
 
         self.vao = self.ctx.vertex_array(self.program, vao_content)
 
+        self.entity_mgr = EntityManager(self.space, self.vbo2, self.vao, self.program)
+
         shape = pymunk.Segment(
             self.space.static_body,
             (0, -50),
@@ -131,34 +137,19 @@ class EngineSingleton:
         y = Vec2d(0, 0)
 
         self.floor = shape
-        self.bodies = []
-        self.balls = []
 
         for x in range(5):
             for y in range(10):
-                size = 64
-                mass = 10.0
-                moment = pymunk.moment_for_box(mass, (size, size))
-                body = pymunk.Body(mass, moment)
-                body.position = Vec2d(300 + x * 100, 105 + y * (size + 0.1))
-                shape = pymunk.Poly.create_box(body, (size, size))
-                shape.friction = 0.3
-                self.space.add(body, shape)
-                self.bodies.append(body)
+                crate = Crate((300 + x * 100), 105 + y * (64 + 0.1), 64, 64)
+                self.entity_mgr.add(crate)
 
     def shoot(self):
-        mass = 100
-        r = 32
-        moment = pymunk.moment_for_circle(mass, 0, r, (0, 0))
-        body = pymunk.Body(mass, moment)
-        body.position = (0, 100)
-        shape = pymunk.Circle(body, r, (0, 0))
-        shape.friction = 0.3
-        self.space.add(body, shape)
-        f = 80000
-        body.apply_impulse_at_local_point((f, 0), (0, 0))
-        self.balls.append(body)
-        #self.sounds.play("test")  # Play the test sound
+        '''
+        Shoot a ball
+        '''
+        ball = Ball(0, 100, 64, 64)
+        ball.apply_force(80000, 0)
+        self.entity_mgr.add(ball)
 
     def mouse_press(self, x_pos, y_pos):
         '''
@@ -209,19 +200,14 @@ class EngineSingleton:
         self.space.step(self.physics_step)
 
         # Update the camera
-        if self.balls:
-            self.camera.update((self.balls[0].position.x, self.balls[0].position.y, 32, 32))
+        #if self.balls:
+        #    self.camera.update(self.balls[0])
 
-        # Draw on the screen
-        self.program['Camera'].value = self.camera.get()
-        self.vbo2.write(b''.join(struct.pack('3f2f4f', b.position.x, b.position.y, b.angle, 32, 32, 1, 1, 1, 0) for b in self.bodies))
-        self.program['Texture'].value = self.textures.get("crate").location
-        self.vao.render(moderngl.TRIANGLE_STRIP, instances=len(self.bodies))
+        # Display the camera
+        self.camera.draw(self.program)
 
-        self.vbo2.orphan()
-        self.vbo2.write(b''.join(struct.pack('3f2f4f', b.position.x, b.position.y, b.angle, 32, 32, 1, 1, 1, 0) for b in self.balls))
-        self.program['Texture'].value = self.textures.get("ball").location
-        self.vao.render(moderngl.TRIANGLE_STRIP, instances=len(self.balls))
+        # Draw all entities
+        self.entity_mgr.draw()
 
     def quit(self):
         '''

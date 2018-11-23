@@ -88,3 +88,6 @@ class Level:
         total_level_width = len(max(self.level_map, key=len)) * BLOCK_WIDTH
         total_level_height = len(self.level_map) * BLOCK_HEIGHT
         return total_level_width, total_level_height
+
+    def update(self):
+        pass

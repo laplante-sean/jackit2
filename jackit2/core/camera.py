@@ -69,10 +69,13 @@ class Camera:
         '''
         Update camera position based on target position
         '''
-        self.pos = self.camera_func(self.screen_size, self.level_size, self.pos, target)
+        self.pos = self.camera_func(
+            self.screen_size, self.level_size, self.pos,
+            (target.x_pos, target.y_pos, target.width, target.height)
+        )
 
-    def get(self):
+    def draw(self, program):
         '''
-        Return the current position of the camera
+        Draw the camera
         '''
-        return tuple(self.pos)
+        program['Camera'].value = tuple(self.pos)
