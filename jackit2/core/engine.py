@@ -15,6 +15,8 @@ from jackit2.core.loader import LevelLoader
 from jackit2.core.entity import EntityManager
 from jackit2.core.audio import GameMusic
 
+from deploy import SITE_DEPLOYMENT
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -142,7 +144,8 @@ class EngineSingleton:
         self.music = GameMusic()
 
         # Decides whether the sound is on by default or not
-        self.music.play_game_music()
+        if SITE_DEPLOYMENT.config.music_enabled:
+            self.music.play_game_music()
 
     def key_press(self, key):
         '''

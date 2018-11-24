@@ -95,6 +95,7 @@ class JackitConfig:
         self.width = 800
         self.height = 600
         self.framerate = 60
+        self.music_enabled = True
 
         self._mode = None
         self.mode = "production"
@@ -130,7 +131,8 @@ class JackitConfig:
                 "height": self.height
             },
             "mode": self.mode,
-            "framerate": self.framerate
+            "framerate": self.framerate,
+            "music_enabled": self.music_enabled
         }
 
     def from_json(self, raw):
@@ -139,6 +141,7 @@ class JackitConfig:
         '''
         self.mode = raw.get("mode", "production")
         self.framerate = validate_uint(raw.get("framerate", 60))
+        self.music_enabled = validate_bool(raw.get("music_enabled", True))
 
         # Get resolution
         res = raw.get("resolution", {"width": 800, "height": 600})
