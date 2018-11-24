@@ -14,6 +14,7 @@ class SiteDeploymentSingleton:
     '''
     Handles initial setup
     '''
+    # pylint: disable=R0902
 
     _instance = None
 

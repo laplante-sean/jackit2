@@ -25,6 +25,7 @@ class Texture:
     '''
     Used to represent and load a texture from an image file
     '''
+    # pylint: disable=R0903
 
     def __init__(self, path, gl_ctx):
         #: Path to the texture file

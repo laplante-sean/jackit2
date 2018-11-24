@@ -5,10 +5,12 @@ Database Models
 from django.db import models
 from django.forms import ModelForm
 
+
 class Leaderboard(models.Model):
     '''
     Database model for a leaderboard entry strip
     '''
+
     user = models.CharField(max_length=50, default="No Name Loser")
     score = models.IntegerField(default=0)
     playtime = models.FloatField(default=0)
@@ -21,10 +23,13 @@ class Leaderboard(models.Model):
     def __str__(self):
         return "[{}]: {} - {}".format(self.pub_date, self.user, self.score)
 
+
 class LeaderboardForm(ModelForm):
     '''
     Handles post data to update the leaderboard
     '''
+    # pylint: disable=R0903
+
     class Meta:
         '''
         Info about the model

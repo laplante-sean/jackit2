@@ -16,6 +16,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+
+# pylint: disable=C0103
 urlpatterns = [
     path('admin/', admin.site.urls),
 ]

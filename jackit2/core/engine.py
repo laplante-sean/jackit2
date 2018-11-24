@@ -7,14 +7,12 @@ import logging
 
 import moderngl
 import pymunk
-from pymunk import Vec2d
 
 from jackit2.core import VERTEX_SHADER, FRAGMENT_SHADER
 from jackit2.core.texture import TextureLoader
 from jackit2.core.camera import Camera, complex_camera
 from jackit2.core.loader import LevelLoader
 from jackit2.core.entity import EntityManager
-from jackit2.entities import Crate, Ball
 
 LOGGER = logging.getLogger(__name__)
 
@@ -81,13 +79,17 @@ class EngineSingleton:
         self.entity_mgr = None
         #: The player
         self.player = None
+        #: The frame buffer
+        self.frame_buffer = None
+        #: The vertex array
+        self.vertex_array = None
 
     def setup(self, main_window):
         '''
         Called to setup the OpenGL context
         '''
-        #if not self.levels:
-        #    raise SetupFailed("No levels could be loaded")
+        if not self.levels:
+            raise SetupFailed("No levels could be loaded")
 
         self.width = main_window.width()
         self.height = main_window.height()
@@ -104,7 +106,7 @@ class EngineSingleton:
         self.space = pymunk.Space()
         self.space.gravity = (0.0, -900.0)
 
-        vbo1 = self.ctx.buffer(
+        vbo = self.ctx.buffer(
             struct.pack(
                 '16f',
                 -1.0, -1.0, 0.0, 0.0,
@@ -114,16 +116,17 @@ class EngineSingleton:
             )
         )
 
-        self.vbo2 = self.ctx.buffer(reserve=(self.width * self.height))
+        self.frame_buffer = self.ctx.buffer(reserve=(self.width * self.height))
 
-        vao_content = [
-            (vbo1, '2f 2f', 'in_vert', 'in_texture'),
-            (self.vbo2, '3f 2f 4f /i', 'in_pos', 'in_size', 'in_tint'),
+        varray_content = [
+            (vbo, '2f 2f', 'in_vert', 'in_texture'),
+            (self.frame_buffer, '3f 2f 4f /i', 'in_pos', 'in_size', 'in_tint'),
         ]
 
-        self.vao = self.ctx.vertex_array(self.program, vao_content)
+        self.vertex_array = self.ctx.vertex_array(self.program, varray_content)
 
-        self.entity_mgr = EntityManager(self.space, self.vbo2, self.vao, self.program)
+        # Create the entity manager to draw and update all objects
+        self.entity_mgr = EntityManager(self.space, self.frame_buffer, self.vertex_array, self.program)
 
         # Load textures
         self.textures.load(self.ctx)

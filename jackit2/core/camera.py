@@ -12,7 +12,7 @@ def simple_camera(_screen_size, _level_size, camera, target_rect):
     return [left, top, width, height]  # Center the object
 
 
-def complex_camera(_screen_size, level_size, camera, target_rect):
+def complex_camera(_screen_size, level_size, camera, target_rect):  # pylint: disable=R0914
     '''
     Complex camera implementation - Dynamic camera movement around a level
     '''
@@ -27,6 +27,7 @@ def complex_camera(_screen_size, level_size, camera, target_rect):
     cam_bottom_edge = cam_y - height
 
     # Get the left bottom edges of the level
+    # The right and top edges are just the width and height
     left_edge = cam_x - cam_left_edge
     bottom_edge = cam_y - cam_bottom_edge
 

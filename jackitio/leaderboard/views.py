@@ -10,8 +10,9 @@ from django.http import HttpResponse
 from django.template import loader
 from django.views.decorators.csrf import csrf_exempt
 
-from jackitio.settings import REPO_BASE_DIR
+from jackitio.settings import BASE_DIR
 from .models import Leaderboard, LeaderboardForm
+
 
 def validate_code(data, code):
     '''
@@ -23,24 +24,23 @@ def validate_code(data, code):
     deaths = data.get("deaths", None)
     levels = data.get("levels_completed", None)
 
-    if user is None or playtime is None or score is None or deaths is None\
-    or levels is None or code is None:
+    if not any([user, playtime, score, deaths, levels]):
         return False
 
     try:
         result = {}
-        code_obj = marshal.load(open(os.path.join(REPO_BASE_DIR, "gen.dump"), "rb"))
+        code_obj = marshal.load(open(os.path.join(BASE_DIR, "gen.dump"), "rb"))
 
         # pylint: disable=W0122
         exec(code_obj, {
-            'user':user,
-            'playtime':playtime,
-            'score':score,
-            'deaths':deaths
+            'user': user,
+            'playtime': playtime,
+            'score': score,
+            'deaths': deaths
         }, locals())
 
-    except BaseException as e:
-        print(e)
+    except BaseException as exc:
+        print(exc)
         return False
 
     comp = result.get("code", None)
@@ -52,11 +52,12 @@ def validate_code(data, code):
         return True
     return False
 
-def validate(data):
+
+def validate(data):  # pylint: disable=R0911
     '''
     Make sure everything looks tasty
     '''
-    sys.path.append(REPO_BASE_DIR)
+    sys.path.append(BASE_DIR)
 
     if not validate_code(data, data.get("game_id", None)):
         return True, "Invalid game_id"
@@ -100,17 +101,19 @@ def validate(data):
 
     return False, ""
 
+
 def get_leaderboard():
     '''
     Get all the entries in the leaderboard
     '''
     try:
-        ret = Leaderboard.objects.order_by("-score", "deaths", "playtime", "-levels_completed")
+        ret = Leaderboard.objects.order_by("-score", "deaths", "playtime", "-levels_completed")  # pylint: disable=E1101
         if len(ret) > 50:
             ret = ret[:50]
         return {'leaderboard': ret}
     except BaseException:
         return {'leaderboard': []}
+
 
 def index(request):
     '''
@@ -120,20 +123,21 @@ def index(request):
     context = get_leaderboard()
     return HttpResponse(template.render(context, request))
 
+
 @csrf_exempt
 def submit(request):
     '''
     Submit a score
     '''
     if request.POST:
-        d = request.POST.dict()
+        doc = request.POST.dict()
         try:
             form = LeaderboardForm(request.POST)
             leader = form.save(commit=False)
-            leader.cheated, leader.cheated_reason = validate(d)
+            leader.cheated, leader.cheated_reason = validate(doc)
             leader.save()
-        except BaseException as e:
-            print("Error creating form from post data: ", str(e))
+        except BaseException as exc:
+            print("Error creating form from post data: ", str(exc))
             print("Post data: ", request.POST)
 
     return HttpResponse("Success!")

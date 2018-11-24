@@ -17,6 +17,7 @@ class LevelMap:
     '''
     Level map format characters
     '''
+    # pylint: disable=R0903
     EXIT = "E"
     SPAWN = "S"
     FLOOR = "F"
@@ -28,6 +29,7 @@ class Level:
     '''
     Base class for a level
     '''
+    # pylint: disable=R0902,R0903
 
     def __init__(self, level_num, level_map, name="", description=""):
         self.level_num = level_num
