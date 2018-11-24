@@ -1,13 +1,12 @@
 language: python
-os:
-  - windows
-  - osx
+sudo: required
 python:
   - "3.5"
   - "3.6"
   - "3.7-dev"
 sudo: false
 install:
+  - sudo apt-get install python3-pyqt5.qtmultimedia
   - pip install --upgrade pip
   - pip install -r requirements.txt -r requirements-dev.txt
 script:
