@@ -12,4 +12,4 @@ install:
 script:
   - pylint --rcfile=.pylintrc deploy.py game.py jackit2 jackitio/jackitio jackitio/leaderboard jackitio/manage.py
   - pycodestyle deploy.py game.py jackit2 jackitio/jackitio jackitio/leaderboard jackitio/manage.py
-  - pytest --cov-report term-missing --cov jackit2
+  - pytest --rootdir=./test --cov=jackit2
