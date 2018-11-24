@@ -125,9 +125,20 @@ class Entity:
             return self._value()  # pylint: disable=E1102
         return self._value
 
-    def apply_force(self, x_force, y_force, local_x=0, local_y=0):
+    def apply_world_force(self, x_force, y_force, world_x=None, world_y=None):
         '''
-        Apply a force to the body
+        Apply a force to the body as if applied from outside the body
+        '''
+        if world_x is None:
+            world_x = self.x_pos
+        if world_y is None:
+            world_y = self.y_pos
+
+        self._shape.body.apply_impulse_at_world_point((x_force, y_force), (world_x, world_y))
+
+    def apply_local_force(self, x_force, y_force, local_x=0, local_y=0):
+        '''
+        Apply a force to the body from within
         '''
         self._shape.body.apply_impulse_at_local_point((x_force, y_force), (local_x, local_y))
 

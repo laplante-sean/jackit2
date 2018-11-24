@@ -78,7 +78,12 @@ class QtOpenGLWidget(QtOpenGL.QGLWidget):
         Handle keypress events
         '''
         LOGGER.debug("keyPressEvent(%d): %s", event.key(), event.text())
-        GAME_ENGINE.shoot()
+        if event.text() == "d":
+            GAME_ENGINE.right()
+        if event.text() in ("w", " "):
+            GAME_ENGINE.jump()
+        if event.text() == "a":
+            GAME_ENGINE.left()
 
     def mousePressEvent(self, event):
         '''

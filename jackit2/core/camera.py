@@ -18,13 +18,22 @@ def complex_camera(_screen_size, level_size, camera, target_rect):
     '''
     level_width, level_height = level_size
     left, top, _, _ = target_rect
-    _, _, width, height = camera
-    left, top = -left + (level_width / 2.5), -top + (level_height / 2.5)
+    cam_x, cam_y, width, height = camera
 
-    left = min(0, left)                           # Stop scrolling at the left edge
-    left = max(-(width - level_width), left)      # Stop scrolling at the right edge
-    top = max(-(height - level_height), top)      # Stop scrolling at the bottom
-    top = min(0, top)                             # Stop scrolling at the top
+    # Get the edges of the camera
+    cam_left_edge = cam_x - width
+    cam_right_edge = cam_x + width
+    cam_top_edge = cam_y + height
+    cam_bottom_edge = cam_y - height
+
+    # Get the left bottom edges of the level
+    left_edge = cam_x - cam_left_edge
+    bottom_edge = cam_y - cam_bottom_edge
+
+    left = min((cam_x - (cam_right_edge - level_width)), left)      # Stop scrolling at the right edge
+    left = max(left_edge, left)                                     # Stop scrolling at the left edge
+    top = min((cam_y - (cam_top_edge - level_height)), top)         # Stop scrolling at the top
+    top = max(bottom_edge, top)                                     # Stop scrolling at the bottom
     return [left, top, width, height]
 
 

@@ -11,7 +11,7 @@ from pymunk import Vec2d
 
 from jackit2.core import VERTEX_SHADER, FRAGMENT_SHADER
 from jackit2.core.texture import TextureLoader
-from jackit2.core.camera import Camera, simple_camera
+from jackit2.core.camera import Camera, complex_camera
 from jackit2.core.loader import LevelLoader
 from jackit2.core.entity import EntityManager
 from jackit2.entities import Crate, Ball
@@ -79,6 +79,8 @@ class EngineSingleton:
         self.textures = TextureLoader.get()
         #: The entity manager. Has all entities to be rendered. Setup in setup()
         self.entity_mgr = None
+        #: The player
+        self.player = None
 
     def setup(self, main_window):
         '''
@@ -95,7 +97,7 @@ class EngineSingleton:
         # Initialize modern GL context
         self.ctx = moderngl.create_context(require=430)
         self.ctx.viewport = (0, 0, self.width, self.height)
-        self.camera = Camera((self.width, self.height), simple_camera)
+        self.camera = Camera((self.width, self.height), complex_camera)
         self.program = self.ctx.program(vertex_shader=VERTEX_SHADER, fragment_shader=FRAGMENT_SHADER)
 
         # Initialize physics
@@ -127,18 +129,37 @@ class EngineSingleton:
         self.textures.load(self.ctx)
 
         # Load the level
-        lvl_width, lvl_height = self.levels[0].load(self.entity_mgr)
+        lvl_width, lvl_height, self.player = self.levels[0].load(self.entity_mgr)
 
         # Update the camera
         self.camera.load_level((lvl_width, lvl_height))
 
-    def shoot(self):
+    def right(self):
         '''
-        Shoot a ball
+        Move right
         '''
-        ball = Ball(0, 100, 64, 64)
-        ball.apply_force(80000, 0)
-        self.entity_mgr.add(ball)
+        if not self.player:
+            return
+
+        self.player.apply_world_force(80000, 0)
+
+    def jump(self):
+        '''
+        Jump the player
+        '''
+        if not self.player:
+            return
+
+        self.player.apply_world_force(0, 80000)
+
+    def left(self):
+        '''
+        Move left
+        '''
+        if not self.player:
+            return
+
+        self.player.apply_world_force(-80000, 0)
 
     def mouse_press(self, x_pos, y_pos):
         '''
@@ -188,9 +209,8 @@ class EngineSingleton:
         # settings it should be adjusted to compensate for slower hardware
         self.space.step(self.physics_step)
 
-        # Update the camera
-        #if self.balls:
-        #    self.camera.update(self.balls[0])
+        # Update the camera to follow the player
+        self.camera.update(self.player)
 
         # Display the camera
         self.camera.draw(self.program)
