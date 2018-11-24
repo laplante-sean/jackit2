@@ -137,6 +137,23 @@ class EngineSingleton:
         # Update the camera
         self.camera.load_level((lvl_width, lvl_height))
 
+    def key_press(self, key):
+        '''
+        Key press event
+        '''
+        if key in ("w", " "):
+            self.jump()
+        if key == "d":
+            self.right()
+        if key == "a":
+            self.left()
+
+    def key_release(self, key):
+        '''
+        key release event
+        '''
+        pass
+
     def right(self):
         '''
         Move right
@@ -213,7 +230,8 @@ class EngineSingleton:
         self.space.step(self.physics_step)
 
         # Update the camera to follow the player
-        self.camera.update(self.player)
+        if not self.mouse_pos:
+            self.camera.update(self.player)
 
         # Display the camera
         self.camera.draw(self.program)
