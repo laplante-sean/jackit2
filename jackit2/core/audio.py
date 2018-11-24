@@ -1,12 +1,11 @@
 '''
-Classes to deal with playing music and sounds
+Does the sound for the game
 '''
 
 import os
 import logging
 
-from PyQt5.QtCore import QUrl
-from PyQt5.QtMultimedia import QSoundEffect, QMediaPlayer, QMediaContent
+import pygame
 
 from deploy import SITE_DEPLOYMENT
 
@@ -15,69 +14,57 @@ LOGGER = logging.getLogger(__name__)
 
 class GameMusic:
     '''
-    Play game music
+    Handles all the sound for the game
     '''
 
-    def __init__(self, parent):
-        self.player = QMediaPlayer(parent)
-        self.player.stateChanged.connect(self.state_changed)
-        self.game_music_path = os.path.join(SITE_DEPLOYMENT.audio_path, "music", "music.mp3")
-        self.game_music_url = QUrl.fromLocalFile(self.game_music_path)
-        self.player.setMedia(QMediaContent(self.game_music_url))
-        self.player.setVolume(25)
+    def __init__(self):
+        pygame.init()
+        game_music_path = os.path.join(SITE_DEPLOYMENT.audio_path, "music", "music.mp3")
+        self.music_loaded = False
 
-    def state_changed(self, state):
+        try:
+            pygame.mixer.music.load(game_music_path)
+            self.music_loaded = True
+        except BaseException as exc:
+            LOGGER.exception("Unable to load music: %s", str(exc))
+            self.music_loaded = False
+
+        self.playing = False
+
+    def is_playing(self):
         '''
-        Called when the player's state changes
+        Getter for instance variable playing
         '''
-        if state == QMediaPlayer.StoppedState:
-            # If the music stopped. Start it again
-            self.play()
+        return self.playing
 
-    def play(self):
+    def play_game_music(self):
         '''
-        Play the game's music
+        Play the game music
         '''
-        self.player.play()
+        if not self.music_loaded:
+            return
 
+        pygame.mixer.music.play(loops=-1)
+        self.playing = True
 
-class GameSound:
-    '''
-    Play a sound
-    '''
-
-    def __init__(self, parent):
-        self._sounds = {}
-        self.load(parent)
-
-    def play(self, name):
+    def pause_game_music(self):
         '''
-        Play a sound
+        Pause the game music
         '''
-        if name not in self._sounds:
-            raise KeyError("No sound found with name '{}'".format(name))
+        if not self.music_loaded:
+            return
 
-        self._sounds[name].play()
+        pygame.mixer.music.pause()
+        self.playing = False
 
-    def load(self, parent):
+    def toggle_game_music(self):
         '''
-        Load all the sounds
+        Toggle the game music on and off
         '''
-        for (dirpath, _, filenames) in os.walk(os.path.join(SITE_DEPLOYMENT.audio_path, "sounds")):
-            for filename in filenames:
-                if not filename.endswith(".wav"):
-                    LOGGER.warning("file '%s' in sounds directory is not a valid sound", filename)
-                    continue
+        if not self.music_loaded:
+            return
 
-                LOGGER.debug("loading sound: %s", filename)
-                path = os.path.join(dirpath, filename)
-                name = os.path.splitext(filename)[0]  # Grab the filename component w/o file ext.
-
-                if name not in self._sounds:
-                    url = QUrl.fromLocalFile(path)
-                    self._sounds[name] = QSoundEffect(parent=parent)
-                    self._sounds[name].setSource(url)
-                    self._sounds[name].setVolume(0.8)
-                    self._sounds[name].setLoopCount(1)
-                else:
-                    LOGGER.warning("texture with name '%s' has already been loaded.", name)
+        if self.is_playing():
+            self.pause_game_music()
+        else:
+            self.play_game_music()

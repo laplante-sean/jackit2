@@ -13,6 +13,7 @@ from jackit2.core.texture import TextureLoader
 from jackit2.core.camera import Camera, complex_camera
 from jackit2.core.loader import LevelLoader
 from jackit2.core.entity import EntityManager
+from jackit2.core.audio import GameMusic
 
 LOGGER = logging.getLogger(__name__)
 
@@ -137,6 +138,12 @@ class EngineSingleton:
         # Update the camera
         self.camera.load_level((lvl_width, lvl_height))
 
+        # Init the sound
+        self.music = GameMusic()
+
+        # Decides whether the sound is on by default or not
+        self.music.play_game_music()
+
     def key_press(self, key):
         '''
         Key press event
@@ -147,6 +154,8 @@ class EngineSingleton:
             self.right()
         if key == "a":
             self.left()
+        if key == "m":
+            self.music.toggle_game_music()
 
     def key_release(self, key):
         '''
