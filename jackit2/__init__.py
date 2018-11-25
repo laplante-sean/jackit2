@@ -164,6 +164,12 @@ def run():
     '''
     Run the game
     '''
+    if hasattr(QtCore.Qt, 'AA_EnableHighDpiScaling'):
+        QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+
+    if hasattr(QtCore.Qt, 'AA_UseHighDpiPixmaps'):
+        QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
+
     # Put the main window in the middle of the screen
     screen = QtWidgets.QDesktopWidget().screenGeometry(-1)
     MAIN_WINDOW.move(
