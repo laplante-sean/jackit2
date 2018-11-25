@@ -1,15 +1,16 @@
 language: python
-sudo: required
 python:
+  - "3.4"
   - "3.5"
   - "3.6"
   - "3.7-dev"
 sudo: false
+before_install:
+  - git lfs pull
 install:
-  - sudo apt-get install python3-pyqt5.qtmultimedia
-  - pip install --upgrade pip
-  - pip install -r requirements.txt -r requirements-dev.txt
+  - python -m pip install --upgrade pip
+  - pip install tox-travis tox coveralls
 script:
-  - pylint --rcfile=.pylintrc deploy.py game.py jackit2 jackitio/jackitio jackitio/leaderboard jackitio/manage.py
-  - pycodestyle deploy.py game.py jackit2 jackitio/jackitio jackitio/leaderboard jackitio/manage.py
-  - pytest --rootdir=./test --cov=jackit2
+  - tox
+after_success:
+  - coveralls
