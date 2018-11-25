@@ -72,8 +72,6 @@ class EngineSingleton:
         self.camera = None
         #: The mouse position
         self.mouse_pos = None
-        #: Aspect ratio for the resolution
-        self.aspect_ratio = None
         #: Level loader
         self.levels = LevelLoader.get()
         #: Loads all textures
@@ -102,7 +100,8 @@ class EngineSingleton:
         # Initialize modern GL context
         self.ctx = moderngl.create_context(require=430)
         self.ctx.viewport = (0, 0, self.width, self.height)
-        self.camera = Camera((self.width, self.height), complex_camera)
+        self.camera = Camera(
+            (self.width, self.height), complex_camera, initial_scale=SITE_DEPLOYMENT.config.high_dpi_scaling)
         self.program = self.ctx.program(vertex_shader=VERTEX_SHADER, fragment_shader=FRAGMENT_SHADER)
 
         # Initialize physics

@@ -42,12 +42,16 @@ class Camera:
     '''
     Game camera
     '''
-    def __init__(self, screen_size, camera_func):
+    def __init__(self, screen_size, camera_func, initial_scale=100.0):
         self.screen_size = screen_size
         self.level_size = (0, 0)
         self.camera_func = camera_func
         self.pos = [0, 0, self.screen_size[0], self.screen_size[1]]
         self.aspect_ratio = self.screen_size[0] / self.screen_size[1]
+
+        scale = (initial_scale / 100.0)
+        scale_amnt = -((screen_size[1] * scale) - screen_size[1])
+        self.zoom(scale_amnt)
 
     def load_level(self, level_size):
         '''

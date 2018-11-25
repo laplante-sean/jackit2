@@ -4,7 +4,7 @@ from unittest.mock import patch, mock_open
 from jackit2.config import (
     JackitConfig, ConfigError, validate_bool,
     validate_color, validate_int, validate_ubyte,
-    validate_uint
+    validate_uint, validate_float
 )
 
 CONFIG_BAD_JSON = '''
@@ -53,6 +53,22 @@ class TestValidators(TestCase):
 
     def test_validate_int_int(self):
         self.assertEqual(validate_int(10), 10)
+
+    def test_validate_float_str(self):
+        self.assertEqual(validate_float("10.0"), 10.0)
+        self.assertEqual(validate_float("10"), 10.0)
+        with self.assertRaises(ConfigError):
+            validate_float("fish")
+
+    def test_validate_float_int(self):
+        self.assertEqual(validate_float(10), 10.0)
+
+    def test_validate_float_wrong_type(self):
+        with self.assertRaises(ConfigError):
+            validate_float({})
+
+    def test_validate_float_flaot(self):
+        self.assertEqual(validate_float(10.0), 10.0)
 
     def test_validate_uint(self):
         with self.assertRaises(ConfigError):

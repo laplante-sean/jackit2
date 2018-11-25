@@ -44,7 +44,24 @@ def validate_int(value):
     elif isinstance(value, int):
         return value
     else:
-        raise ConfigError("Unknown type object. Expecting 'int', got: {}".format(type(value)))
+        raise ConfigError("Unknown type for object. Expecting 'int', got: {}".format(type(value)))
+
+
+def validate_float(value):
+    '''
+    Validagte a float value
+    '''
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            raise ConfigError("Invalid float value: {}".format(value))
+    elif isinstance(value, int):
+        return float(value)
+    elif isinstance(value, float):
+        return value
+    else:
+        raise ConfigError("Unknown type for object. Expecting 'float', got: {}".format(type(value)))
 
 
 def validate_uint(value):
@@ -96,6 +113,7 @@ class JackitConfig:
         self.height = 600
         self.framerate = 60
         self.music_enabled = True
+        self.high_dpi_scaling = 100.0
 
         self._mode = None
         self.mode = "production"
@@ -132,7 +150,8 @@ class JackitConfig:
             },
             "mode": self.mode,
             "framerate": self.framerate,
-            "music_enabled": self.music_enabled
+            "music_enabled": self.music_enabled,
+            "high_dpi_scaling": self.high_dpi_scaling
         }
 
     def from_json(self, raw):
@@ -142,6 +161,7 @@ class JackitConfig:
         self.mode = raw.get("mode", "production")
         self.framerate = validate_uint(raw.get("framerate", 60))
         self.music_enabled = validate_bool(raw.get("music_enabled", True))
+        self.high_dpi_scaling = validate_float(raw.get("high_dpi_scaling", 100.0))
 
         # Get resolution
         res = raw.get("resolution", {"width": 800, "height": 600})

@@ -165,9 +165,11 @@ def run():
     Run the game
     '''
     if hasattr(QtCore.Qt, 'AA_EnableHighDpiScaling'):
+        LOGGER.debug("Setting QApplication attribute: AA_EnableHighDpiScaling")
         QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
 
     if hasattr(QtCore.Qt, 'AA_UseHighDpiPixmaps'):
+        LOGGER.debug("Setting QApplication attribute: AA_UseHightDpiPixmaps")
         QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
 
     # Put the main window in the middle of the screen
