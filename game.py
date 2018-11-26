@@ -10,9 +10,9 @@ import argparse
 
 from PyQt5.QtWidgets import QApplication
 
-from jackit2.config import ConfigError
 from jackit2 import run, MAIN_WINDOW
-from deploy import SITE_DEPLOYMENT
+from jackit2.util import get_site_deployment
+from jackit2.config import ConfigError
 
 
 def sigint_handler(_signum, _frame):
@@ -30,14 +30,15 @@ def main():
     '''
     argparse.ArgumentParser(description='JackIT 2.0! (New and improved)')
     signal.signal(signal.SIGINT, sigint_handler)  # Register our signal handler for cntrl-c
+    site_deploy = get_site_deployment()
 
     try:
         run()  # Start the application
     except ConfigError as exc:
-        print("Invalid config: {}. Please fix {}".format(str(exc), SITE_DEPLOYMENT.config_path))
+        print("Invalid config: {}. Please fix {}".format(str(exc), site_deploy.config_path))
         sys.exit(1)
     except BaseException as exc:
-        path = os.path.join(SITE_DEPLOYMENT.base_path, "bugreport.txt")
+        path = os.path.join(site_deploy.base_path, "bugreport.txt")
         print("Exception during game execution!")
         print("See {} for details.".format(path))
         print("Exception: {}".format(str(exc)))

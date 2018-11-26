@@ -7,9 +7,8 @@ import logging
 
 from PyQt5 import QtOpenGL, QtWidgets, QtCore
 
-from deploy import SITE_DEPLOYMENT
-from jackit2.core.engine import GAME_ENGINE
-
+from jackit2.util import get_game_engine, get_config
+from jackit2.core.input import InputEventType
 
 LOGGER = logging.getLogger(__name__)
 
@@ -18,20 +17,20 @@ class QtOpenGLWidget(QtOpenGL.QGLWidget):
     '''
     Qt OpenGL widget class
     '''
-    # pylint: disable=C0103, R0201, R0902
+    # pylint: disable=C0103, R0902
 
-    def __init__(self):
+    def __init__(self, config):
+        # Create the format
         fmt = QtOpenGL.QGLFormat()
         fmt.setVersion(4, 3)
         fmt.setProfile(QtOpenGL.QGLFormat.CoreProfile)
         fmt.setSampleBuffers(True)
         fmt.setSwapInterval(1)
 
+        # Set the format in the parent class
         super().__init__(fmt, None)
 
-        # Get the config
-        self.config = SITE_DEPLOYMENT.config
-        self.framerate = self.config.framerate
+        self.framerate = config.framerate
         self.skip_ms = 1000.0 / self.framerate  # Max ms a frame can take to work out to be the desired framerate
         self.fps = self.framerate  # Tracks the current FPS
 
@@ -40,7 +39,11 @@ class QtOpenGLWidget(QtOpenGL.QGLWidget):
         self.setWindowTitle(self.window_title)
 
         # Set a fixed size so the window size cannot be changed during the game
-        self.setFixedSize(self.config.width, self.config.height)
+        self.setFixedSize(config.width, config.height)
+
+        # Put the main window in the middle of the screen
+        screen = QtWidgets.QDesktopWidget().screenGeometry(-1)
+        self.move((screen.width() - config.width) // 2, (screen.height() - config.height) // 2)
 
         # Start the game timer. Tracks elapsed time
         self.timer = QtCore.QElapsedTimer()
@@ -48,7 +51,10 @@ class QtOpenGLWidget(QtOpenGL.QGLWidget):
         self.prev_time = self.timer.elapsed()
 
         # True if development mode is enabled. False otherwise.
-        self.dev_mode = self.config.is_development_mode()
+        self.dev_mode = config.is_development_mode()
+
+        # Get the game engine
+        self.game_engine = get_game_engine()
 
         # Prepare to display the FPS and playtime int he window titles
         if self.dev_mode:
@@ -70,7 +76,7 @@ class QtOpenGLWidget(QtOpenGL.QGLWidget):
         Override base class closeEvent
         '''
         LOGGER.debug("closeEvent: %s", str(event))
-        GAME_ENGINE.quit()
+        self.game_engine.quit()
         event.accept()
 
     def keyPressEvent(self, event):
@@ -78,61 +84,49 @@ class QtOpenGLWidget(QtOpenGL.QGLWidget):
         Handle keypress events
         '''
         LOGGER.debug("keyPressEvent(%d): %s", event.key(), event.text())
-        GAME_ENGINE.key_press(event.text())
+        self.game_engine.handle_input_event(event, event_type=InputEventType.KEY_PRESS)
 
     def keyReleaseEvent(self, event):
         '''
         Handle key release events
         '''
         LOGGER.debug("keyReleaseEvent(%d): %s", event.key(), event.text())
-        GAME_ENGINE.key_release(event.text())
+        self.game_engine.handle_input_event(event, event_type=InputEventType.KEY_RELEASE)
 
     def mousePressEvent(self, event):
         '''
         Handle mouse click events
         '''
-        if not self.dev_mode:
-            return
-
         LOGGER.debug("mousePressEvent(%d): (%d, %d)", event.button(), event.x(), event.y())
-        GAME_ENGINE.mouse_press(event.x(), event.y())
+        self.game_engine.handle_input_event(event, event_type=InputEventType.MOUSE_PRESS)
 
     def mouseReleaseEvent(self, event):
         '''
         Handle mouse release events
         '''
-        if not self.dev_mode:
-            return
-
         LOGGER.debug("mouseReleaseEvent(%d): (%d, %d)", event.button(), event.x(), event.y())
-        GAME_ENGINE.mouse_release(event.x(), event.y())
+        self.game_engine.handle_input_event(event, event_type=InputEventType.MOUSE_RELEASE)
 
     def mouseMoveEvent(self, event):
         '''
         Handle mouse move events. These are only caught if a button is being held
         '''
-        if not self.dev_mode:
-            return
-
         LOGGER.debug("mouseMoveEvent(%d, %d)", event.x(), event.y())
-        GAME_ENGINE.mouse_move(event.x(), event.y())
+        self.game_engine.handle_input_event(event, event_type=InputEventType.MOUSE_MOVE)
 
     def wheelEvent(self, event):
         '''
         Handle mouse wheel events.
         '''
-        if not self.dev_mode:
-            return
-
         LOGGER.debug("wheelEvent(%d, %d)", event.angleDelta().x(), event.angleDelta().y())
-        GAME_ENGINE.mouse_wheel(event.angleDelta().y())
+        self.game_engine.handle_input_event(event, event_type=InputEventType.MOUSE_WHEEL)
 
     def initializeGL(self):
         '''
         Initialize OpenGL
         '''
         LOGGER.debug("initializeGL()")
-        GAME_ENGINE.setup(self)
+        self.game_engine.setup(self.width(), self.height(), self.framerate)
         self.prev_time = self.timer.elapsed()
 
     def paintGL(self):
@@ -156,7 +150,7 @@ class QtOpenGLWidget(QtOpenGL.QGLWidget):
         self.prev_time = self.timer.elapsed()
 
         # Do the rendering and math and everything
-        GAME_ENGINE.update()
+        self.game_engine.update()
         self.update()
 
 
@@ -164,25 +158,9 @@ def run():
     '''
     Run the game
     '''
-    if hasattr(QtCore.Qt, 'AA_EnableHighDpiScaling'):
-        LOGGER.debug("Setting QApplication attribute: AA_EnableHighDpiScaling")
-        QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
-
-    if hasattr(QtCore.Qt, 'AA_UseHighDpiPixmaps'):
-        LOGGER.debug("Setting QApplication attribute: AA_UseHightDpiPixmaps")
-        QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
-
-    # Put the main window in the middle of the screen
-    screen = QtWidgets.QDesktopWidget().screenGeometry(-1)
-    MAIN_WINDOW.move(
-        (screen.width() - SITE_DEPLOYMENT.config.width) // 2,
-        (screen.height() - SITE_DEPLOYMENT.config.height) // 2
-    )
-
-    # Show the window and execute the app
     MAIN_WINDOW.show()
     QT_APP.exec_()
 
 
 QT_APP = QtWidgets.QApplication(sys.argv)
-MAIN_WINDOW = QtOpenGLWidget()
+MAIN_WINDOW = QtOpenGLWidget(get_config())

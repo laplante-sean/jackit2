@@ -12,7 +12,7 @@ from deploy import SITE_DEPLOYMENT
 LOGGER = logging.getLogger(__name__)
 
 
-class GameMusic:
+class GameAudio:
     '''
     Handles all the sound for the game
     '''

@@ -3,7 +3,8 @@ Base class for levels
 '''
 
 from jackit2.core import BLOCK_HEIGHT, BLOCK_WIDTH
-from jackit2.entities import Floor, Wall, Crate, Ball
+from jackit2.entities import Floor, Wall, Crate
+from jackit2.actors.player import Player
 
 
 class LevelGeneratorError(Exception):
@@ -80,7 +81,7 @@ class Level:
                     # sprite = self.create_exit_block(x, y)
                     pass
                 elif col == LevelMap.SPAWN:
-                    self.player = entity = Ball(*args)
+                    self.player = entity = Player(cur_x, cur_y)
                 elif col == LevelMap.WALL:
                     entity = Wall(*args)
                 elif col == LevelMap.CRATE:

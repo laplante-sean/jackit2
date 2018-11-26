@@ -134,13 +134,30 @@ class Entity:
         if world_y is None:
             world_y = self.y_pos
 
-        self._shape.body.apply_impulse_at_world_point((x_force, y_force), (world_x, world_y))
+        self._shape.body.apply_force_at_world_point((x_force, y_force), (world_x, world_y))
 
     def apply_local_force(self, x_force, y_force, local_x=0, local_y=0):
         '''
         Apply a force to the body from within
         '''
-        self._shape.body.apply_impulse_at_local_point((x_force, y_force), (local_x, local_y))
+        self._shape.body.apply_force_at_local_point((x_force, y_force), (local_x, local_y))
+
+    def apply_local_impulse(self, x_imp, y_imp, local_x=0, local_y=0):
+        '''
+        Apply a local impulse
+        '''
+        self._shape.body.apply_impulse_at_local_point((x_imp, y_imp), (local_x, local_y))
+
+    def apply_world_impulse(self, x_imp, y_imp, world_x=None, world_y=None):
+        '''
+        Apply a world impulse
+        '''
+        if world_x is None:
+            world_x = self.x_pos
+        if world_y is None:
+            world_y = self.y_pos
+
+        self._shape.body.apply_impulse_at_world_point((x_imp, y_imp), (world_x, world_y))
 
     def add_to_space(self, space):
         '''
